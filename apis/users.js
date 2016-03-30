@@ -36,7 +36,7 @@ function userRoutes() {
     };
 
     //
-    $fh.db(options, function (err, data) {
+    fh.db(options, function (err, data) {
       if (err) {
         console.error("Error " + err);
 
