@@ -7,6 +7,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var cors = require('cors');
 var request = require('request');
+var fh = require('fh-mbaas-api');
 
 
 
@@ -26,11 +27,55 @@ function userRoutes() {
     // 2. validate if the user attached to the token has admin priviledges (403 unauthorised if they dont)
     // 3. return the list of users if requesting user is admin.
 
-    // response
-    res.json({
-      users: 'get all users',
-      message: 'this resource is currentlly not implemented'
-    });
+    
+    // Read a single entry
+    var options = {
+      "act": "read",
+      "type": "myFirstEntity", // Entity/Collection name
+      "guid": "4e563ea44fe8e7fc19000002" // Row/Entry ID
+    };
+
+    //
+    $fh.db(options, function (err, data) {
+      if (err) {
+        console.error("Error " + err);
+
+        res.json({
+          mongoerror: err
+        });   
+
+
+      } else {
+        console.log(JSON.stringify(data));
+        /* Sample output
+          {
+            "fields": {
+              "address1": "22 Blogger Lane",
+              "address2": "Bloggsville",
+              "country": "Bloggland",
+              "fistName": "Joe",
+              "lastName": "Bloggs",
+              "phone": "555-123456"
+            },
+            "guid": "4e563ea44fe8e7fc19000002",
+            "type": "myFirstEntity"
+          }
+        */
+        res.json({
+          mongosuccess: data
+        });
+
+      }
+});
+
+
+
+
+    // // response
+    // res.json({
+    //   users: 'get all users',
+    //   message: 'this resource is currentlly not implemented'
+    // });
 
   });
 
