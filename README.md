@@ -1,25 +1,23 @@
-# FeedHenry Hello World MBaaS Server
+### User Service
 
-This is a blank 'hello world' FeedHenry MBaaS. Use it as a starting point for building your APIs. 
+User service is responsible for providing user resources to client applications and other SEMAT services. 
 
-# Group Hello World API
+User service exposes a set of API resources.
 
-# hello [/hello]
+User service is a NodeJS application. In order to run this service on your own local host, you have to have [NodeJS (and npm) installed](https://nodejs.org/en/).
 
-'Hello world' endpoint.
+Next, get [Grunt](http://gruntjs.com/getting-started) installed on your dev mashine if you dont have it.
 
-## hello [POST] 
+	npm install -g grunt-cli
+	
+Next, clone the the git source code of this repository. After clonning the git repository, go to the the directory created by git and run npm command to install required dependencies
 
-'Hello world' endpoint.
+	npm install
+	
+After npm finishes installing all dependencies, you can start the service with 
 
-+ Request (application/json)
-    + Body
-            {
-              "hello": "world"
-            }
+	grunt serve
+	
+By default application will be listening on localhost port 8001
 
-+ Response 200 (application/json)
-    + Body
-            {
-              "msg": "Hello world"
-            }
+by [@sauliuz](https://github.com/sauliuz)
