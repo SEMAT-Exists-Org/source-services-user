@@ -2,7 +2,7 @@
 
 User service is responsible for providing user resources to client applications and other SEMAT services. 
 
-User service exposes a set of API resources.
+User service exposes a set of API resources. The [JSON Schemas are defined in the separate markdown](https://github.com/SEMAT-Exists-Org/source-services-user/blob/master/SCHEMAS.md).
 
 User service is a NodeJS application. In order to run this service on your own local host, you have to have [NodeJS (and npm) installed](https://nodejs.org/en/).
 

@@ -8,6 +8,9 @@ var bodyParser = require('body-parser');
 var cors = require('cors');
 var request = require('request');
 var fh = require('fh-mbaas-api');
+var validator = require('validator');
+var crypto = require('crypto');
+var uuid = require('uuid');
 
 
 
@@ -28,13 +31,10 @@ function userRoutes() {
     // 3. return the list of users if requesting user is admin.
 
     
-    // Read a single entry
+    // read all entries from collection
     var options = {
       "act": "list",
-      "type": "sematUsers", // Entity/Collection name
-      "eq": {
-          "email":"some@email.com"
-      }     
+      "type": "sematUsers" // Entity/Collection name    
     };
 
     // fh wrapper for db interaction
@@ -49,20 +49,7 @@ function userRoutes() {
 
       } else {
         console.log(JSON.stringify(data));
-        /* Sample output
-          {
-            "fields": {
-              "address1": "22 Blogger Lane",
-              "address2": "Bloggsville",
-              "country": "Bloggland",
-              "fistName": "Joe",
-              "lastName": "Bloggs",
-              "phone": "555-123456"
-            },
-            "guid": "4e563ea44fe8e7fc19000002",
-            "type": "myFirstEntity"
-          }
-        */
+        
         res.json({
           mongosuccess: data
         });
@@ -70,9 +57,6 @@ function userRoutes() {
       }
 
     });
-
-
-
 
     // // response
     // res.json({
@@ -92,13 +76,106 @@ function userRoutes() {
     // 3. request to user database (403 if not found)
     // 4. for found users, generate the token, store in the cashe. send back the username, token and TTL
 
-    // response
-    res.json({
-      users: 'post user login',
-      message: 'this resource is currentlly not implemented'
-    });    
+    // retrieve request payload details
+    var username = req.body.username || '';
+    var password = req.body.password || '';
 
-  });
+    // only progress if all required fields are present
+    if (validator.isEmail(username) && validator.isAlphanumeric(password)) {
+
+      // validation passed
+      // find user in db
+      var options = {
+        "act": "list",
+        "type": "sematUsers", // Entity/Collection name
+        "eq": {
+          "email":""+username
+        }     
+      };
+
+      // mongodb request
+      fh.db(options, function (err, data) {
+        
+        // db comms error
+        if (err) {
+          console.error("dbcomms error: " + err);
+
+          // error response
+          res.status(500);
+          res.json({
+            status: 'error',
+            message: 'internal error',
+            "code":"500"
+          });
+        }
+
+        else {
+          
+          // found the user
+          if (data.count == 1) {
+                       
+            var md5Password = crypto.createHash('md5').update(password).digest("hex");
+
+            // user data match
+            if (md5Password == data.list[0].fields.password && username == data.list[0].fields.email) {
+              
+              // generate uuid
+              var userUuid = uuid.v1();
+
+              // TODO
+              // cache the token
+
+              res.status(200);
+              res.json({
+                status: "success",
+                name: ""+data.list[0].fields.name,
+                email:""+data.list[0].fields.email,
+                role:""+data.list[0].fields.role,
+                token:""+userUuid
+              });            
+            
+            }
+            else { // user data mismatch
+              
+              // generic error response
+              res.status(400);
+              res.json({
+                status: 'error',
+                message: 'unsuccessful login',
+                "code":"400"
+              });
+            }
+
+          }
+          
+          else { // user with this email is not found
+
+            // generic error response
+            res.status(400);
+            res.json({
+              status: 'error',
+              message: 'unsuccessful login',
+              "code":"400"
+            });
+          }
+
+        }
+      });
+      
+    } 
+    else { // payload validation failed 
+
+      // error response
+      res.status(400);
+      res.json({
+        status: 'error',
+        message: 'malformed request, check JSON schema',
+        "code":"400"
+      });
+
+    }
+
+  }); // end of /login resource
 
 
   // API resource for user login.
@@ -126,54 +203,130 @@ function userRoutes() {
     // 3. add user to the database, make them low level user by default (admin users cannot be created by mobile client)
     // 4. if create is success, generate the token, store in the cashe. send back the username, token and TTL
 
+    // retrieve request payload details
+    var name = req.body.name || '';
+    var email = req.body.email || '';
+    var password = req.body.password || '';
 
-    // Create a single entry/row
-    var options = {
-      "act": "create",
-      "type": "sematUsers", // Entity/Collection name
-      "email": "some@email.com"
-      // "fields": { // The structure of the entry/row data. A data is analogous to "Row" in MySql or "Documents" in MongoDB
-      //   "firstName": "Joe",
-      //   "lastName": "Bloggs",
-      //   "email": "some@email.com"
-      // }
-    };
+    // only progress if all required fields are present
+    if (validator.isAlphanumeric(name) && validator.isEmail(email) && validator.isAlphanumeric(password)) {
 
-    //
-    fh.db(options, function (err, data) {
-      if (err) {
-        console.error("Error " + err);
+      // validation passed
+      // before creating new user record, verify if email address doesnt exist
+      var options = {
+        "act": "list",
+        "type": "sematUsers", // Entity/Collection name
+        "eq": {
+          "email":""+email
+        }     
+      };
 
-        res.json({
-          mongoerror: err
-        });   
+      // mongodb request
+      fh.db(options, function (err, data) {
+        
+        // db comms error
+        if (err) {
+          console.error("dbcomms error: " + err);
+
+          // error response
+          res.status(500);
+          res.json({
+            status: 'error',
+            message: 'internal error',
+            "code":"500"
+          }); 
 
 
-      } else {
-        console.log(JSON.stringify(data));
-        /* Sample output
-          {
-            "fields": {
-              "address1": "22 Blogger Lane",
-              "address2": "Bloggsville",
-              "country": "Bloggland",
-              "fistName": "Joe",
-              "lastName": "Bloggs",
-              "phone": "555-123456"
-            },
-            "guid": "4e563ea44fe8e7fc19000002",
-            "type": "myFirstEntity"
+        } 
+        else {
+          
+          // if result count is more then 0 email is already in the db
+          if (data.count != 0) {
+
+            // error response
+            res.status(500);
+            res.json({
+              status: 'error',
+              message: 'email is not unique',
+              "code":"400"
+            });
+
+          
+          } 
+          else { // email is unique
+
+            // new user data
+            var options = {
+              "act": "create",
+              "type": "sematUsers", // Entity/Collection name
+              "fields": { 
+                "name": ""+name,
+                "email":""+email,
+                "password":""+crypto.createHash('md5').update(password).digest("hex"),
+                "role":"user"
+              }
+            };
+
+
+            // another mongodb request
+            fh.db(options, function (err, data) {
+          
+              // db comms error
+              if (err) {
+                console.error("dbcomms error: " + err);
+
+                // error response
+                res.status(500);
+                res.json({
+                  status: 'error',
+                  message: 'internal error',
+                  "code":"500"
+                });
+
+              
+              } 
+              else { // new user created
+
+                // generate uuid token
+                var userUuid = uuid.v1();
+
+                // TODO
+                // cache the token
+
+                res.status(200);
+                res.json({
+                  status: "success",
+                  name: ""+data.fields.name,
+                  email:""+data.fields.email,
+                  role:""+data.fields.role,
+                  token:""+userUuid
+                });
+
+              }
+
+            });     
+
           }
-        */
-        res.json({
-          mongosuccess: data
-        });
 
-      }
-      
-    });
+        }
 
-  });  
+      }); // end of original db query
+
+     
+    } 
+    else { // payload validation failed 
+
+      // error response
+      res.status(400);
+      res.json({
+        status: 'error',
+        message: 'malformed request, check JSON schema',
+        "code":"400"
+      });
+
+    }
+
+  });  // end of /register resource
 
   
   // end of users resources

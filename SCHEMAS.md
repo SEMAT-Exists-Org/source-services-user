@@ -49,6 +49,7 @@ Success
     	"status": "success",
     	"name": "John Smith",
     	"email": "email@address.com",
+    	"role": "user",
     	"token": "s34eded56464xxx"
 	}
 ```	
@@ -59,7 +60,7 @@ Error
 	{
     	"status": "error",
     	"message":"email not unique",
-    	"code":"403"
+    	"code":"400"
 	}
 ```
 
