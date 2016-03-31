@@ -26,37 +26,116 @@ function userRoutes() {
 
     // approach
     // 1. validate that the token submited in the request is still in the cache (if not ask for relogin)
-    // 2. validate if the user attached to the token has admin priviledges (403 unauthorised if they dont)
+    // 2. validate if the user attached to the token has admin priviledges (400 bad request if they dont)
     // 3. return the list of users if requesting user is admin.
 
-    
-    // read all entries from collection
-    var options = {
-      "act": "list",
-      "type": "sematUsers" // Entity/Collection name    
-    };
+    var token = req.headers.token || '';
 
-    // fh wrapper for db interaction
-    fh.db(options, function (err, data) {
-      if (err) {
-        console.error("Error " + err);
+    // validate if valid uuid value
+    if (validator.isUUID(token,4)){
+      
+      // find if uuid token is in the cache
+      var cacheOptions = {
+        "act": "load",
+        "key": ""+token,
+      };
 
-        res.json({
-          mongoerror: err
-        });   
-
-
-      } else {
-        console.log(JSON.stringify(data));
+      fh.cache(cacheOptions, function (err, cachedObject) {
         
-        res.json({
-          mongosuccess: data
-        });
+        var userData = cachedObject;
 
-      }
+        // redis comms error
+        if (err) {
 
-    });
+          console.error("dbcomms error: " + err);
 
+          // error response
+          res.status(500);
+          res.json({
+            status: 'error',
+            message: 'internal error',
+            "code":"500"
+          });
+        }
+
+        else if (userData == null){
+
+          // no token in the cache found, relogin
+          res.status(302);
+          res.json({
+            status: 'error',
+            message: 'user must relogin',
+            "code":"302"
+          });          
+        }
+
+        else {
+
+          // JSON.parse fails if object is not JSON
+          try {
+            var userDataJSON = JSON.parse(userData);
+          } 
+          catch (e){
+
+            console.error("cached object not JSON: "+e);
+
+            // error response
+            res.status(500);
+            res.json({
+              status: 'error',
+              message: 'internal error',
+              "code":"500"
+            });
+          }
+
+          // only allow all user lookup if user is admin user
+          if (userDataJSON.fields.role == "admin") {
+
+            // all user lookup
+            var options = {
+              "act": "list",
+              "type": "sematUsers" // Entity/Collection name    
+            };
+
+            // db query
+            fh.db(options, function (err, data) {
+              
+              if (err) {
+                console.error("dbcomms error: " + err);
+
+                // error response
+                res.status(500);
+                res.json({
+                  status: 'error',
+                  message: 'internal error',
+                  "code":"500"
+                });
+              } 
+              
+              else {              
+               
+                // user list response
+                res.status(200);
+                res.json(data);                
+              }
+            
+            });
+          }
+
+          else { // not admin user
+
+            // generic error response
+            res.status(400);
+            res.json({
+              status: 'error',
+              message: 'bad request',
+              "code":"400"
+            });
+
+          }
+        }
+      });
+    }
   });
 
 
@@ -113,7 +192,7 @@ function userRoutes() {
             if (md5Password == data.list[0].fields.password && username == data.list[0].fields.email) {
               
               // generate uuid
-              var userUuid = uuid.v1();
+              var userUuid = uuid.v4();
 
               // cache the token
               var cacheOptions = {
@@ -279,7 +358,7 @@ function userRoutes() {
                 "name": ""+name,
                 "email":""+email,
                 "password":""+crypto.createHash('md5').update(password).digest("hex"),
-                "role":"user"
+                "role":"admin"
               }
             };
 
@@ -304,7 +383,7 @@ function userRoutes() {
               else { // new user created
 
                 // generate uuid token
-                var userUuid = uuid.v1();
+                var userUuid = uuid.v4();
 
                 // cache the token
                 var cacheOptions = {
