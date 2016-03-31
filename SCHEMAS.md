@@ -9,7 +9,7 @@ This document contains JSON Schemas for User service API resources and example r
 ```json
 	POST /users/register
 	{
-    	"name": "John Smith"
+    	"name": "John Smith",
     	"email": "email@address.com",
     	"password": "user-password"
     }
@@ -47,8 +47,8 @@ Success
 ```json
 	{
     	"status": "success",
-    	"name": "John Smith"
-    	"email": "email@address.com"
+    	"name": "John Smith",
+    	"email": "email@address.com",
     	"token": "s34eded56464xxx"
 	}
 ```	
@@ -58,7 +58,7 @@ Error
 ```json
 	{
     	"status": "error",
-    	"message":"email not unique"
+    	"message":"email not unique",
     	"code":"403"
 	}
 ```
@@ -105,8 +105,8 @@ Success
 ```json
 	{
     	"status": "success",
-    	"name": "John Smith"
-    	"email": "email@address.com"
+    	"name": "John Smith",
+    	"email": "email@address.com",
     	"token": "s34eded56464xxx"
 	}
 ```	
