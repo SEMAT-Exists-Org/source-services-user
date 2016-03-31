@@ -58,12 +58,6 @@ function userRoutes() {
 
     });
 
-    // // response
-    // res.json({
-    //   users: 'get all users',
-    //   message: 'this resource is currentlly not implemented'
-    // });
-
   });
 
 
@@ -122,17 +116,40 @@ function userRoutes() {
               // generate uuid
               var userUuid = uuid.v1();
 
-              // TODO
               // cache the token
+              var cacheOptions = {
+                "act": "save",
+                "key": ""+userUuid,
+                "value":""+JSON.stringify(data.list[0]),
+                "expire": 900 // Expiry time in seconds.
+              };
 
-              res.status(200);
-              res.json({
-                status: "success",
-                name: ""+data.list[0].fields.name,
-                email:""+data.list[0].fields.email,
-                role:""+data.list[0].fields.role,
-                token:""+userUuid
-              });            
+              fh.cache(cacheOptions, function (err, cachedObject) {
+                // redis comms error
+                if (err) {
+
+                  console.error("dbcomms error: " + err);
+
+                  // error response
+                  res.status(500);
+                  res.json({
+                    status: 'error',
+                    message: 'internal error',
+                    "code":"500"
+                  });
+                }
+                
+                // good to send response
+                res.status(200);
+                res.json({
+                  status: "success",
+                  name: ""+data.list[0].fields.name,
+                  email:""+data.list[0].fields.email,
+                  role:""+data.list[0].fields.role,
+                  token:""+userUuid
+                });
+
+              });           
             
             }
             else { // user data mismatch
@@ -161,7 +178,7 @@ function userRoutes() {
 
         }
       });
-      
+
     } 
     else { // payload validation failed 
 
@@ -290,17 +307,41 @@ function userRoutes() {
                 // generate uuid token
                 var userUuid = uuid.v1();
 
-                // TODO
                 // cache the token
+                var cacheOptions = {
+                  "act": "save",
+                  "key": ""+userUuid,
+                  "value":""+JSON.stringify(data),
+                  "expire": 900 // Expiry time in seconds.
+                };
 
-                res.status(200);
-                res.json({
-                  status: "success",
-                  name: ""+data.fields.name,
-                  email:""+data.fields.email,
-                  role:""+data.fields.role,
-                  token:""+userUuid
-                });
+                fh.cache(cacheOptions, function (err, cachedObject) {
+                  
+                  // redis comms error
+                  if (err) {
+
+                    console.error("dbcomms error: " + err);
+
+                    // error response
+                    res.status(500);
+                    res.json({
+                      status: 'error',
+                      message: 'internal error',
+                      "code":"500"
+                    });
+                  }
+                  
+                  // good to send the response
+                  res.status(200);
+                  res.json({
+                    status: "success",
+                    name: ""+data.fields.name,
+                    email:""+data.fields.email,
+                    role:""+data.fields.role,
+                    token:""+userUuid
+                  });
+
+                });      
 
               }
 

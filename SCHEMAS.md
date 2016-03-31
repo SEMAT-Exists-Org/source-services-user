@@ -1,6 +1,6 @@
 ## JSON Schemas and example requests
 
-This document contains JSON Schemas for User service API resources and example requests / responses.
+This document contains [JSON Schemas](http://json-schema.org/) for User service API resources and example requests / responses.
 
 ### User register
 
