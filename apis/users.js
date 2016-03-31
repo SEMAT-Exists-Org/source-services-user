@@ -114,6 +114,7 @@ function userRoutes() {
               
               else {              
                
+                // TODO - remove user password fields
                 // user list response
                 res.status(200);
                 res.json(data);                
@@ -344,10 +345,9 @@ function userRoutes() {
               status: 'error',
               message: 'email is not unique',
               "code":"400"
-            });
-
-          
+            });          
           } 
+
           else { // email is unique
 
             // new user data
@@ -358,7 +358,7 @@ function userRoutes() {
                 "name": ""+name,
                 "email":""+email,
                 "password":""+crypto.createHash('md5').update(password).digest("hex"),
-                "role":"admin"
+                "role":"user"
               }
             };
 
@@ -418,17 +418,11 @@ function userRoutes() {
                     role:""+data.fields.role,
                     token:""+userUuid
                   });
-
-                });      
-
+                });   
               }
-
             });     
-
           }
-
         }
-
       }); // end of original db query
 
      
