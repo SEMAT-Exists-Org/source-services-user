@@ -30,12 +30,14 @@ function userRoutes() {
     
     // Read a single entry
     var options = {
-      "act": "read",
-      "type": "myFirstEntity", // Entity/Collection name
-      "guid": "4e563ea44fe8e7fc19000002" // Row/Entry ID
+      "act": "list",
+      "type": "sematUsers", // Entity/Collection name
+      "eq": {
+          "email":"some@email.com"
+      }     
     };
 
-    //
+    // fh wrapper for db interaction
     fh.db(options, function (err, data) {
       if (err) {
         console.error("Error " + err);
@@ -66,7 +68,8 @@ function userRoutes() {
         });
 
       }
-});
+
+    });
 
 
 
@@ -123,11 +126,53 @@ function userRoutes() {
     // 3. add user to the database, make them low level user by default (admin users cannot be created by mobile client)
     // 4. if create is success, generate the token, store in the cashe. send back the username, token and TTL
 
-    // response
-    res.json({
-      activities: 'post user registration',
-      message: 'this resource is currentlly not implemented'
+
+    // Create a single entry/row
+    var options = {
+      "act": "create",
+      "type": "sematUsers", // Entity/Collection name
+      "email": "some@email.com"
+      // "fields": { // The structure of the entry/row data. A data is analogous to "Row" in MySql or "Documents" in MongoDB
+      //   "firstName": "Joe",
+      //   "lastName": "Bloggs",
+      //   "email": "some@email.com"
+      // }
+    };
+
+    //
+    fh.db(options, function (err, data) {
+      if (err) {
+        console.error("Error " + err);
+
+        res.json({
+          mongoerror: err
+        });   
+
+
+      } else {
+        console.log(JSON.stringify(data));
+        /* Sample output
+          {
+            "fields": {
+              "address1": "22 Blogger Lane",
+              "address2": "Bloggsville",
+              "country": "Bloggland",
+              "fistName": "Joe",
+              "lastName": "Bloggs",
+              "phone": "555-123456"
+            },
+            "guid": "4e563ea44fe8e7fc19000002",
+            "type": "myFirstEntity"
+          }
+        */
+        res.json({
+          mongosuccess: data
+        });
+
+      }
+      
     });
+
   });  
 
   
