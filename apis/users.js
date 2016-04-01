@@ -136,7 +136,17 @@ function userRoutes() {
           }
         }
       });
+    } else { // no token suplie in the request
+
+      // generic error response
+      res.status(400);
+      res.json({
+        status: 'error',
+        message: 'bad request',
+        "code":"400"
+      });
     }
+
   });
 
 
