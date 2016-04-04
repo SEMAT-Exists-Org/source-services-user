@@ -151,7 +151,6 @@ function userRoutes() {
         "code":"400"
       });
     }
-
   });
 
   // API resource to retrieve single user details (admin resource)
@@ -287,8 +286,7 @@ function userRoutes() {
         message: 'bad request',
         "code":"400"
       });
-    }   
-
+    }
   });
 
   // API resource to update single user details (admin resource)
@@ -306,8 +304,131 @@ function userRoutes() {
 
   });
 
+  // API resource to update single user details (admin resource)
+  userRouter.delete('/:guid', function(req, res) {
 
+    
+    var token = req.headers.token || '';
+    var guid = req.params.guid || '';
 
+    // validate if valid uuid value
+    if (validator.isUUID(token,4)){
+      
+      // find if uuid token is in the cache
+      var cacheOptions = {
+        "act": "load",
+        "key": ""+token,
+      };
+
+      fh.cache(cacheOptions, function (err, cachedObject) {
+        
+        var userData = cachedObject;
+
+        // redis comms error
+        if (err) {
+
+          console.error("dbcomms error: " + err);
+
+          // error response
+          res.status(500);
+          res.json({
+            status: 'error',
+            message: 'internal error',
+            "code":"500"
+          });
+        }
+
+        else if (userData == null){
+
+          // no token in the cache found, relogin
+          res.status(302);
+          res.json({
+            status: 'error',
+            message: 'user must relogin',
+            "code":"302"
+          });          
+        }
+
+        else {
+
+          // JSON.parse fails if object is not JSON
+          try {
+            var userDataJSON = JSON.parse(userData);
+          } 
+          catch (e){
+
+            console.error("cached object is not JSON: "+e);
+
+            // error response
+            res.status(500);
+            res.json({
+              status: 'error',
+              message: 'internal error',
+              "code":"500"
+            });
+          }
+
+          // only allow all user lookup if user is admin user
+          if (userDataJSON.fields.role == "admin") {
+
+            // user delete
+            var options = {
+              "act": "delete",
+              "type": "sematUsers", // Entity/Collection name
+              "guid": ""+guid
+            };
+
+            // db query
+            fh.db(options, function (err, data) {
+              
+              if (err) {
+                console.error("dbcomms error: " + err);
+
+                // error response
+                res.status(500);
+                res.json({
+                  status: 'error',
+                  message: 'internal error',
+                  "code":"500"
+                });
+              } 
+              
+              else {              
+               
+                // user details response
+                res.status(200);
+                res.json({status: 'success'});                
+              }
+            
+            });
+          }
+
+          else { // not admin user
+
+            // generic error response
+            res.status(400);
+            res.json({
+              status: 'error',
+              message: 'bad request',
+              "code":"400"
+            });
+
+          }
+        }
+      });
+    } else { // no token suplie in the request
+
+      // generic error response
+      res.status(400);
+      res.json({
+        status: 'error',
+        message: 'bad request',
+        "code":"400"
+      });
+    }  
+
+  });
+  
 
   // API resource for user login.
   userRouter.post('/login', function(req, res) {
