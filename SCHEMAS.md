@@ -9,7 +9,8 @@ This document contains [JSON Schemas](http://json-schema.org/) for User service 
 ```json
 	POST /users/register
 	{
-    	"name": "John Smith",
+    	"firstname": "John",
+    	"lastname": " Smith"
     	"email": "email@address.com",
     	"password": "user-password"
     }
@@ -24,8 +25,12 @@ This document contains [JSON Schemas](http://json-schema.org/) for User service 
     	"description": "User Register Request",
     	"type": "object",
     	"properties": {
-        	"name": {
-            	"description": "User name field",
+        	"firstname": {
+            	"description": "User first name field. Alphanumeric",
+            	"type": "string"
+        	},
+        	"lastname": {
+            	"description": "User last name field. Alphanumeric",
             	"type": "string"
         	},
         	"email": {
@@ -47,7 +52,8 @@ Success
 ```json
 	{
     	"status": "success",
-    	"name": "John Smith",
+    	"firstname": "John",
+    	"lastname": "Smith"
     	"email": "email@address.com",
     	"role": "user",
     	"token": "s34eded56464xxx"
