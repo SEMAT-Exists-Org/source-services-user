@@ -350,11 +350,11 @@ function userRoutes() {
           if (data.count != 0) {
 
             // error response
-            res.status(500);
+            res.status(409);
             res.json({
               status: 'error',
               message: 'email is not unique',
-              "code":"400"
+              "code":"409"
             });          
           } 
 
