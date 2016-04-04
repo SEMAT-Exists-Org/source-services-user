@@ -10,7 +10,7 @@ This document contains [JSON Schemas](http://json-schema.org/) for User service 
 	POST /users/register
 	{
     	"firstname": "John",
-    	"lastname": " Smith"
+    	"lastname": " Smith",
     	"email": "email@address.com",
     	"password": "user-password"
     }
