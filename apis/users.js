@@ -114,7 +114,12 @@ function userRoutes() {
               
               else {              
                
-                // TODO - remove user password fields
+                // we have got the response
+                // removing password field before sending back
+                data.list.forEach(function(user){
+                  delete user.fields.password;
+                });
+
                 // user list response
                 res.status(200);
                 res.json(data);                
@@ -148,6 +153,160 @@ function userRoutes() {
     }
 
   });
+
+  // API resource to retrieve single user details (admin resource)
+  userRouter.get('/:userEmail', function(req, res) {
+      
+    // approach
+    // 1. request header has token in it
+    // 2. compare if the token is admin level
+    // 3. retrieve user details by email if exists
+
+    var token = req.headers.token || '';
+    var userEmail = req.params.userEmail || '';
+
+    // validate if valid uuid value
+    if (validator.isUUID(token,4) && validator.isEmail(userEmail)){
+      
+      // find if uuid token is in the cache
+      var cacheOptions = {
+        "act": "load",
+        "key": ""+token,
+      };
+
+      fh.cache(cacheOptions, function (err, cachedObject) {
+        
+        var userData = cachedObject;
+
+        // redis comms error
+        if (err) {
+
+          console.error("dbcomms error: " + err);
+
+          // error response
+          res.status(500);
+          res.json({
+            status: 'error',
+            message: 'internal error',
+            "code":"500"
+          });
+        }
+
+        else if (userData == null){
+
+          // no token in the cache found, relogin
+          res.status(302);
+          res.json({
+            status: 'error',
+            message: 'user must relogin',
+            "code":"302"
+          });          
+        }
+
+        else {
+
+          // JSON.parse fails if object is not JSON
+          try {
+            var userDataJSON = JSON.parse(userData);
+          } 
+          catch (e){
+
+            console.error("cached object is not JSON: "+e);
+
+            // error response
+            res.status(500);
+            res.json({
+              status: 'error',
+              message: 'internal error',
+              "code":"500"
+            });
+          }
+
+          // only allow all user lookup if user is admin user
+          if (userDataJSON.fields.role == "admin") {
+
+            // all user lookup
+            var options = {
+              "act": "list",
+              "type": "sematUsers", // Entity/Collection name
+              "eq": {
+                "email":""+userEmail
+              }    
+            };
+
+            // db query
+            fh.db(options, function (err, data) {
+              
+              if (err) {
+                console.error("dbcomms error: " + err);
+
+                // error response
+                res.status(500);
+                res.json({
+                  status: 'error',
+                  message: 'internal error',
+                  "code":"500"
+                });
+              } 
+              
+              else {              
+               
+                // we have got the response
+                // removing password field before sending back
+                data.list.forEach(function(user){
+                  delete user.fields.password;
+                });
+
+                // user details response
+                res.status(200);
+                res.json(data);                
+              }
+            
+            });
+          }
+
+          else { // not admin user
+
+            // generic error response
+            res.status(400);
+            res.json({
+              status: 'error',
+              message: 'bad request',
+              "code":"400"
+            });
+
+          }
+        }
+      });
+    } else { // no token suplie in the request
+
+      // generic error response
+      res.status(400);
+      res.json({
+        status: 'error',
+        message: 'bad request',
+        "code":"400"
+      });
+    }   
+
+  });
+
+  // API resource to update single user details (admin resource)
+  userRouter.put('/:userEmail', function(req, res) {
+      
+    // approach
+    // 1. get the token from JSON
+    // 2. delete the token key from cache (200 ok upon success)
+
+    // response
+    res.json({
+      users: 'post user logout',
+      message: 'this resource is currentlly not implemented'
+    });    
+
+  });
+
+
 
 
   // API resource for user login.
