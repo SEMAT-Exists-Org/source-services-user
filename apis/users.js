@@ -232,7 +232,8 @@ function userRoutes() {
                 res.status(200);
                 res.json({
                   status: "success",
-                  name: ""+data.list[0].fields.name,
+                  firstname: ""+data.list[0].fields.fistname,
+                  lastname: ""+data.list[0].fields.lastname,
                   email:""+data.list[0].fields.email,
                   role:""+data.list[0].fields.role,
                   token:""+userUuid
@@ -310,12 +311,13 @@ function userRoutes() {
     // 4. if create is success, generate the token, store in the cashe. send back the username, token and TTL
 
     // retrieve request payload details
-    var name = req.body.name || '';
+    var firstname = req.body.firstname || '';
+    var lastname = req.body.lastname || '';
     var email = req.body.email || '';
     var password = req.body.password || '';
 
     // only progress if all required fields are present
-    if (validator.isAlphanumeric(name) && validator.isEmail(email) && validator.isAlphanumeric(password)) {
+    if (validator.isAlphanumeric(firstname) && validator.isAlphanumeric(lastname) && validator.isEmail(email) && validator.isAlphanumeric(password)) {
 
       // validation passed
       // before creating new user record, verify if email address doesnt exist
@@ -365,7 +367,8 @@ function userRoutes() {
               "act": "create",
               "type": "sematUsers", // Entity/Collection name
               "fields": { 
-                "name": ""+name,
+                "firstname": ""+firstname,
+                "lastname": ""+lastname,
                 "email":""+email,
                 "password":""+crypto.createHash('md5').update(password).digest("hex"),
                 "role":"user"
@@ -423,7 +426,8 @@ function userRoutes() {
                   res.status(200);
                   res.json({
                     status: "success",
-                    name: ""+data.fields.name,
+                    firstname: ""+data.fields.firstname,
+                    lastname: ""+data.fields.lastname,
                     email:""+data.fields.email,
                     role:""+data.fields.role,
                     token:""+userUuid
