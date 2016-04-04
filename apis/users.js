@@ -232,7 +232,7 @@ function userRoutes() {
                 res.status(200);
                 res.json({
                   status: "success",
-                  firstname: ""+data.list[0].fields.fistname,
+                  firstname: ""+data.list[0].fields.firstname,
                   lastname: ""+data.list[0].fields.lastname,
                   email:""+data.list[0].fields.email,
                   role:""+data.list[0].fields.role,
