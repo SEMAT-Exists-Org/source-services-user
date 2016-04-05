@@ -154,7 +154,7 @@ function userRoutes() {
   });
 
   // API resource to retrieve single user details (admin resource)
-  userRouter.get('/:userEmail', function(req, res) {
+  userRouter.get('/:guid', function(req, res) {
       
     // approach
     // 1. request header has token in it
@@ -162,10 +162,10 @@ function userRoutes() {
     // 3. retrieve user details by email if exists
 
     var token = req.headers.token || '';
-    var userEmail = req.params.userEmail || '';
+    var guid = req.params.guid || '';
 
     // validate if valid uuid value
-    if (validator.isUUID(token,4) && validator.isEmail(userEmail)){
+    if (validator.isUUID(token,4)){
       
       // find if uuid token is in the cache
       var cacheOptions = {
@@ -226,11 +226,9 @@ function userRoutes() {
 
             // all user lookup
             var options = {
-              "act": "list",
-              "type": "sematUsers", // Entity/Collection name
-              "eq": {
-                "email":""+userEmail
-              }    
+              "act": "read",
+              "type": "sematUsers",
+              "guid": ""+guid    
             };
 
             // db query
@@ -252,9 +250,7 @@ function userRoutes() {
                
                 // we have got the response
                 // removing password field before sending back
-                data.list.forEach(function(user){
-                  delete user.fields.password;
-                });
+                delete data.fields.password;
 
                 // user details response
                 res.status(200);
@@ -289,18 +285,156 @@ function userRoutes() {
     }
   });
 
-  // API resource to update single user details (admin resource)
-  userRouter.put('/:userEmail', function(req, res) {
-      
-    // approach
-    // 1. get the token from JSON
-    // 2. delete the token key from cache (200 ok upon success)
+  // Update single user details (admin resource)
+  userRouter.put('/:guid', function(req, res) {
+    
+    var token = req.headers.token || '';
+    var guid = req.params.guid || '';
 
-    // response
-    res.json({
-      users: 'post user logout',
-      message: 'this resource is currentlly not implemented'
-    });    
+    // preparing for validation
+    var firstname = req.body.firstname || '';
+    var lastname = req.body.lastname || '';
+    var email = req.body.email || '';
+    var role = req.body.role || '';
+       
+
+    // validate if valid uuid value
+    if (validator.isUUID(token,4) && 
+        validator.isAlphanumeric(firstname) && 
+        validator.isAlphanumeric(lastname) && 
+        validator.isEmail(email) && validator.isAlphanumeric(role)){
+      
+      // find if uuid token is in the cache
+      var cacheOptions = {
+        "act": "load",
+        "key": ""+token,
+      };
+
+      fh.cache(cacheOptions, function (err, cachedObject) {
+        
+        var userData = cachedObject;
+
+        // redis comms error
+        if (err) {
+
+          console.error("dbcomms error: " + err);
+
+          // error response
+          res.status(500);
+          res.json({
+            status: 'error',
+            message: 'internal error',
+            "code":"500"
+          });
+        }
+
+        else if (userData == null){
+
+          // no token in the cache found, relogin
+          res.status(302);
+          res.json({
+            status: 'error',
+            message: 'user must relogin',
+            "code":"302"
+          });          
+        }
+
+        else {
+
+          // JSON.parse fails if object is not JSON
+          try {
+            var userDataJSON = JSON.parse(userData);
+          } 
+          catch (e){
+
+            console.error("cached object is not JSON: "+e);
+
+            // error response
+            res.status(500);
+            res.json({
+              status: 'error',
+              message: 'internal error',
+              "code":"500"
+            });
+          }
+
+          // only allow all user lookup if user is admin user
+          if (userDataJSON.fields.role == "admin") {
+
+            // first we get the user by id
+            var options = {
+              "act": "read",
+              "type": "sematUsers",
+              "guid": ""+guid 
+            };
+
+            $fh.db(options, function (err, entity) {
+
+              // this will be updated
+              var entityToUpdate = entity;
+              entityToUpdate.firstname = firstname;
+              entityToUpdate.lastname = lastname;
+              entityToUpdate.email = email;
+              entityToUpdate.role = role;
+
+              
+              var options = {
+                "act": "update",
+                "type": "sematUsers",
+                "guid": ""+guid,
+                "fields": fieldsToUpdate
+              };
+
+              // db query
+              fh.db(options, function (err, data) {
+                
+                if (err) {
+                  console.error("dbcomms error: " + err);
+
+                  // error response
+                  res.status(500);
+                  res.json({
+                    status: 'error',
+                    message: 'internal error',
+                    "code":"500"
+                  });
+                } 
+                
+                else {              
+                 
+                  // user details response
+                  res.status(200);
+                  res.json({status: 'success', user:data});                
+                }
+              
+              });
+            });            
+          }
+
+          else { // not admin user
+
+            // generic error response
+            res.status(400);
+            res.json({
+              status: 'error',
+              message: 'bad request',
+              "code":"400"
+            });
+
+          }
+        }
+      });
+    } 
+    else { // no token suplie in the request
+
+      // generic error response
+      res.status(400);
+      res.json({
+        status: 'error',
+        message: 'malformed request, check JSON schema',
+        "code":"400"
+      });
+    } 
 
   });
 
@@ -428,7 +562,6 @@ function userRoutes() {
     }  
 
   });
-  
 
   // API resource for user login.
   userRouter.post('/login', function(req, res) {
@@ -516,6 +649,7 @@ function userRoutes() {
                   lastname: ""+data.list[0].fields.lastname,
                   email:""+data.list[0].fields.email,
                   role:""+data.list[0].fields.role,
+                  guid:""+data.list[0].guid,
                   token:""+userUuid
                 });
 
@@ -567,19 +701,12 @@ function userRoutes() {
 
   // API resource for user login.
   userRouter.post('/logout', function(req, res) {
-      
-    // approach
-    // 1. get the token from JSON
-    // 2. delete the token key from cache (200 ok upon success)
-
+    
     // response
-    res.json({
-      users: 'post user logout',
-      message: 'this resource is currentlly not implemented'
-    });    
+    res.status(200);
+    res.json({status: 'success'});     
 
   });
-
 
   // API resource to create new user registration.
   userRouter.post('/register', function(req, res) {
@@ -710,6 +837,7 @@ function userRoutes() {
                     lastname: ""+data.fields.lastname,
                     email:""+data.fields.email,
                     role:""+data.fields.role,
+                    guid:""+data.guid,
                     token:""+userUuid
                   });
                 });   
@@ -742,7 +870,5 @@ function userRoutes() {
   return userRouter;
 };
 
-
 module.exports = userRoutes;
-
 // the end

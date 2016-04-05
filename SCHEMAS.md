@@ -1,6 +1,8 @@
 ## JSON Schemas and example requests
 
-This document contains [JSON Schemas](http://json-schema.org/) for User service API resources and example requests / responses.
+This document contains [JSON Schemas](http://json-schema.org/) for User service API resources.
+
+It also has example requests / responses. Request domain depends on where are you running the User service.
 
 ### User register
 
@@ -38,11 +40,11 @@ This document contains [JSON Schemas](http://json-schema.org/) for User service 
             	"type": "string"
         	},        	
         	"password": {
-            	"description": "User password",
+            	"description": "User password. Alphanumeric",
             	"type": "string"
         	}
     	},
-    	"required": ["name", "email", "password"]
+    	"required": ["firstname", "lastname", "email", "password"]
 	}
 ```
 
@@ -56,20 +58,36 @@ Success
     	"lastname": "Smith"
     	"email": "email@address.com",
     	"role": "user",
-    	"token": "s34eded56464xxx"
+    	"guid":"5703f3e4e7c53a2c83000001"
+    	"token": "bb079c85-5e7b-4eca-ba93-feeacf551a41"
 	}
 ```	
 
-Error
+Errors
 
 ```json
 	{
     	"status": "error",
     	"message":"email not unique",
+    	"code":"409"
+	}
+```
+
+```json
+	{
+    	"status": "error",
+    	"message":"malformed request, check JSON schema",
     	"code":"400"
 	}
 ```
 
+```json
+	{
+    	"status": "error",
+    	"message":"internal error",
+    	"code":"500"
+	}
+```
 
 
 ### User login
@@ -112,47 +130,49 @@ Success
 ```json
 	{
     	"status": "success",
-    	"name": "John Smith",
+    	"firstname": "John",
+    	"lastname": "Smith",
     	"email": "email@address.com",
-    	"token": "s34eded56464xxx"
+    	"role":"user",
+    	"guid":"5703ef9dedc8c6707e000001"
+    	"token": "677fac2f-db89-4674-bdcf-69831370769a"
 	}
 ```	
 
-Error
+Errors
 
 ```json
 	{
     	"status": "error",
-    	"code":"403"
+    	"message":"unsuccessful login",
+    	"code":"409"
 	}
 ```
+
+```json
+	{
+    	"status": "error",
+    	"message":"malformed request, check JSON schema",
+    	"code":"400"
+	}
+```
+
+```json
+	{
+    	"status": "error",
+    	"message":"internal error",
+    	"code":"500"
+	}
+```
+
+
 ### User logout
 
 #### Request
 
 ```json
 	POST /users/logout
-	{
-    	"token": "s34eded56464xxx"
-    }
-```
-    
-#### Request JSON Schema
-
-```json
-	{
-    	"$schema": "http://json-schema.org/draft-04/schema#",
-    	"title": "User Login Request",
-    	"description": "User Login Request",
-    	"type": "object",
-    	"properties": {
-        	"token": {
-            	"description": "Token received from User service after user performed log in.",
-            	"type": "string"
-        	}
-    	},
-    	"required": ["token"]
-	}
+	Header: token: 677fac2f-db89-4674-bdcf-69831370769a
 ```
 
 #### Response
@@ -166,9 +186,126 @@ Success
 
 Error
 
+
 ```json
 	{
     	"status": "error",
+    	"message":"internal error",
     	"code":"500"
 	}
 ```
+
+### List All Users (admin resource)
+
+Admin resources can only be consumed by admin level users. Service checks the user role by validating suplied token
+
+#### Request
+
+```json
+	GET /users
+	Headers: token: 677fac2f-db89-4674-bdcf-69831370769a
+```
+
+#### Response
+Success
+
+```json
+{
+	"count": 2,
+	"list": [
+	{
+		"type": "sematUsers",
+		"guid": "5703ef9dedc8c6707e000001",
+		"fields": {
+			"firstname": "Super",
+			"lastname": "Admin",
+			"email": "root@email.com",
+			"role": "admin"
+		}
+	},
+	{
+		"type": "sematUsers",
+		"guid": "5703f3e4e7c53a2c83000001",
+		"fields": {
+			"firstname": "Apocalyptica",
+			"lastname": "Forever",
+			"email": "finland@email.com",
+			"role": "user"
+		}
+	}
+	]
+}
+```	
+
+Errors
+
+```json
+	{
+    	"status": "error",
+    	"message":"user must relogin",
+    	"code":"302"
+	}
+```
+
+```json
+	{
+    	"status": "error",
+    	"message":"bad request",
+    	"code":"400"
+	}
+```
+
+```json
+	{
+    	"status": "error",
+    	"message":"internal error",
+    	"code":"500"
+	}
+```
+
+### Delete Specific User (admin resource)
+
+Admin resources can only be consumed by admin level users. Service checks the user role by validating suplied token
+
+#### Request
+
+```json
+	DELETE /users/{guid}
+	Headers: token: 677fac2f-db89-4674-bdcf-69831370769a
+```
+
+#### Response
+Success
+
+```json
+	{
+    	"status": "success"
+	}
+```	
+
+Errors
+
+```json
+	{
+    	"status": "error",
+    	"message":"user must relogin",
+    	"code":"302"
+	}
+```
+
+```json
+	{
+    	"status": "error",
+    	"message":"bad request",
+    	"code":"400"
+	}
+```
+
+```json
+	{
+    	"status": "error",
+    	"message":"internal error",
+    	"code":"500"
+	}
+```
+
