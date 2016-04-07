@@ -10,6 +10,7 @@ It also has example requests / responses. Request domain depends on where are yo
 
 ```json
 	POST /users/register
+	Headers: Content-Type: application/json
 	{
     	"firstname": "John",
     	"lastname": " Smith",
@@ -55,10 +56,10 @@ Success
 	{
     	"status": "success",
     	"firstname": "John",
-    	"lastname": "Smith"
+    	"lastname": "Smith",
     	"email": "email@address.com",
     	"role": "user",
-    	"guid":"5703f3e4e7c53a2c83000001"
+    	"guid":"5703f3e4e7c53a2c83000001",
     	"token": "bb079c85-5e7b-4eca-ba93-feeacf551a41"
 	}
 ```	
@@ -96,6 +97,7 @@ Errors
 
 ```json
 	POST /users/login
+	Headers: Content-Type: application/json
 	{
     	"username": "email@address.com",
     	"password": "user-password"
@@ -134,7 +136,7 @@ Success
     	"lastname": "Smith",
     	"email": "email@address.com",
     	"role":"user",
-    	"guid":"5703ef9dedc8c6707e000001"
+    	"guid":"5703ef9dedc8c6707e000001",
     	"token": "677fac2f-db89-4674-bdcf-69831370769a"
 	}
 ```	
@@ -195,15 +197,137 @@ Error
 	}
 ```
 
-### List All Users (admin resource)
+### User register
+
+#### Request
+
+```json
+	POST /users/register
+	{
+    	"firstname": "John",
+    	"lastname": " Smith",
+    	"email": "email@address.com",
+    	"password": "user-password"
+    }
+```
+    
+#### Request JSON Schema
+
+```json
+	{
+    	"$schema": "http://json-schema.org/draft-04/schema#",
+    	"title": "User Register Request",
+    	"description": "User Register Request",
+    	"type": "object",
+    	"properties": {
+        	"firstname": {
+            	"description": "User first name field. Alphanumeric",
+            	"type": "string"
+        	},
+        	"lastname": {
+            	"description": "User last name field. Alphanumeric",
+            	"type": "string"
+        	},
+        	"email": {
+            	"description": "Users email address. It becomes unique username once registered",
+            	"type": "string"
+        	},        	
+        	"password": {
+            	"description": "User password. Alphanumeric",
+            	"type": "string"
+        	}
+    	},
+    	"required": ["firstname", "lastname", "email", "password"]
+	}
+```
+
+#### Response
+Success
+
+```json
+	{
+    	"status": "success",
+    	"firstname": "John",
+    	"lastname": "Smith",
+    	"email": "email@address.com",
+    	"role": "user",
+    	"guid":"5703f3e4e7c53a2c83000001",
+    	"token": "bb079c85-5e7b-4eca-ba93-feeacf551a41"
+	}
+```	
+
+Errors
+
+```json
+	{
+    	"status": "error",
+    	"message":"email not unique",
+    	"code":"409"
+	}
+```
+
+```json
+	{
+    	"status": "error",
+    	"message":"malformed request, check JSON schema",
+    	"code":"400"
+	}
+```
+
+```json
+	{
+    	"status": "error",
+    	"message":"internal error",
+    	"code":"500"
+	}
+```
+
+### Update Specific User (admin resource)
 
 Admin resources can only be consumed by admin level users. Service checks the user role by validating suplied token
 
 #### Request
 
 ```json
-	GET /users
+	PUT /users/{user-guid}	
+	Headers: Content-Type: application/json
 	Headers: token: 677fac2f-db89-4674-bdcf-69831370769a
+	{
+    	"firstname": "John",
+    	"lastname": " Smith",
+    	"email": "email@address.com",
+    	"role": "admin"
+    }
+```
+
+#### Request JSON Schema
+
+```json
+	{
+    	"$schema": "http://json-schema.org/draft-04/schema#",
+    	"title": "User Update Request",
+    	"description": "User Update Request",
+    	"type": "object",
+    	"properties": {
+        	"firstname": {
+            	"description": "User first name field. Alphanumeric",
+            	"type": "string"
+        	},
+        	"lastname": {
+            	"description": "User last name field. Alphanumeric",
+            	"type": "string"
+        	},
+        	"email": {
+            	"description": "Users email address. Should be unique accross all users",
+            	"type": "string"
+        	},        	
+        	"role": {
+            	"description": "Users role. Currentlly supported values are user and admin. Alphanumeric",
+            	"type": "string"
+        	}
+    	},
+    	"required": ["firstname", "lastname", "email", "role"]
+	}
 ```
 
 #### Response
@@ -211,29 +335,17 @@ Success
 
 ```json
 {
-	"count": 2,
-	"list": [
-	{
-		"type": "sematUsers",
-		"guid": "5703ef9dedc8c6707e000001",
-		"fields": {
-			"firstname": "Super",
-			"lastname": "Admin",
-			"email": "root@email.com",
-			"role": "admin"
-		}
-	},
-	{
-		"type": "sematUsers",
-		"guid": "5703f3e4e7c53a2c83000001",
-		"fields": {
-			"firstname": "Apocalyptica",
-			"lastname": "Forever",
-			"email": "finland@email.com",
-			"role": "user"
-		}
-	}
-	]
+  "status": "success",
+  "user": {
+    "type": "sematUsers",
+    "guid": "57062c5a4d74eeecb0000001",
+    "fields": {
+      "firstname": "Saulius",
+      "lastname": "Zukauskas",
+      "email": "root@email.com",
+      "role": "admin"
+    }
+  }
 }
 ```	
 
@@ -270,7 +382,7 @@ Admin resources can only be consumed by admin level users. Service checks the us
 #### Request
 
 ```json
-	DELETE /users/{guid}
+	DELETE /users/5703f9eb5306583d5a000018
 	Headers: token: 677fac2f-db89-4674-bdcf-69831370769a
 ```
 

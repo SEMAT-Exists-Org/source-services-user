@@ -368,21 +368,25 @@ function userRoutes() {
               "guid": ""+guid 
             };
 
-            $fh.db(options, function (err, entity) {
+            fh.db(options, function (err, entity) {
+
+              
 
               // this will be updated
-              var entityToUpdate = entity;
+              var entityToUpdate = entity.fields;
+
+              console.log(entityToUpdate);
+
               entityToUpdate.firstname = firstname;
               entityToUpdate.lastname = lastname;
               entityToUpdate.email = email;
               entityToUpdate.role = role;
-
               
               var options = {
                 "act": "update",
                 "type": "sematUsers",
                 "guid": ""+guid,
-                "fields": fieldsToUpdate
+                "fields": entityToUpdate
               };
 
               // db query
@@ -402,6 +406,10 @@ function userRoutes() {
                 
                 else {              
                  
+
+                  // removing password field before sending back
+                  delete data.fields.password;
+
                   // user details response
                   res.status(200);
                   res.json({status: 'success', user:data});                
