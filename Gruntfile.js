@@ -35,6 +35,7 @@ module.exports = function(grunt) {
         }
       }
     },
+    serve: ['nodemon', 'watch'],
     concurrent: {
       serve: ['nodemon', 'watch'],
       debug: ['node-inspector', 'shell:debug', 'open:debug'],
@@ -72,30 +73,6 @@ module.exports = function(grunt) {
           stderr: true
         },
         command: 'env NODE_PATH=. ./node_modules/.bin/turbo --setUp=test/accept/server.js --tearDown=test/accept/server.js test/accept'
-      },
-      coverage_unit: {
-        options: {
-          stdout: true,
-          stderr: true
-        },
-        command: [
-          'rm -rf coverage cov-unit',
-          'env NODE_PATH=. ./node_modules/.bin/istanbul cover --dir cov-unit ./node_modules/.bin/turbo -- --setUp=test/unit/global.js --tearDown=test/unit/global.js --series=true test/unit',
-          './node_modules/.bin/istanbul report',
-          'echo "See html coverage at: `pwd`/coverage/lcov-report/index.html"'
-        ].join('&&')
-      },
-      coverage_accept: {
-        options: {
-          stdout: true,
-          stderr: true
-        },
-        command: [
-          'rm -rf coverage cov-accept',
-          'env NODE_PATH=. ./node_modules/.bin/istanbul cover --dir cov-accept ./node_modules/.bin/turbo -- --setUp=test/accept/server.js --tearDown=test/accept/server.js test/accept',
-          './node_modules/.bin/istanbul report',
-          'echo "See html coverage at: `pwd`/coverage/lcov-report/index.html"'
-        ].join('&&')
       }
     },
     open: {
@@ -117,28 +94,27 @@ module.exports = function(grunt) {
           'plato': ['apis/**/*.js']
         }
       }
+    },
+    cucumberjs: {
+      src: 'tests/features',
+      options: {
+        format: 'pretty',
+        steps: 'tests/features/step_definitions'
+      }
     }
   });
 
   // Load NPM tasks
   require('load-grunt-tasks')(grunt, {scope: 'devDependencies'});
-
-  // Testing tasks
-  grunt.registerTask('test', ['shell:unit', 'shell:accept']);
-  grunt.registerTask('unit', ['shell:unit']);
-  grunt.registerTask('accept', ['env:local', 'shell:accept']);
-
-  // Coverate tasks
-  grunt.registerTask('coverage', ['shell:coverage_unit', 'shell:coverage_accept']);
-  grunt.registerTask('coverage-unit', ['shell:coverage_unit']);
-  grunt.registerTask('coverage-accept', ['env:local', 'shell:coverage_accept']);
+  grunt.loadNpmTasks('grunt-cucumber');
 
   // Making grunt default to force in order not to break the project.
   grunt.option('force', true);
 
+  grunt.registerTask('test', ['cucumberjs']);
   grunt.registerTask('analysis', ['plato:src', 'open:platoReport']);
-
   grunt.registerTask('serve', ['env:local', 'concurrent:serve']);
   grunt.registerTask('debug', ['env:local', 'concurrent:debug']);
   grunt.registerTask('default', ['serve']);
+
 };
