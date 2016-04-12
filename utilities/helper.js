@@ -44,6 +44,16 @@ Helper.prototype.generic400 = function(res) {
   });
 };
 
+Helper.prototype.failedLogin400 = function(res) {
+
+  // generic failed login response
+  res.status(400);
+  res.json({
+    status: 'error',
+    message: 'unsuccessful login',
+    "code":"400"
+  });
+};
 
 Helper.prototype.relogin302 = function(res) {
 

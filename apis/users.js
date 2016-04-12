@@ -480,13 +480,8 @@ function userRoutes() {
         if (err) {
           console.error("dbcomms error: " + err);
 
-          // error response
-          res.status(500);
-          res.json({
-            status: 'error',
-            message: 'internal error',
-            "code":"500"
-          });
+          // internal error response
+          helper.internal500(res);
         }
 
         else {
@@ -516,13 +511,8 @@ function userRoutes() {
 
                   console.error("dbcomms error: " + err);
 
-                  // error response
-                  res.status(500);
-                  res.json({
-                    status: 'error',
-                    message: 'internal error',
-                    "code":"500"
-                  });
+                  // internal error response
+                  helper.internal500(res);
                 }
                 
                 // good to send response
@@ -542,26 +532,15 @@ function userRoutes() {
             }
             else { // user data mismatch
               
-              // generic error response
-              res.status(400);
-              res.json({
-                status: 'error',
-                message: 'unsuccessful login',
-                "code":"400"
-              });
+              // malformed incomming request
+              helper.failedLogin400(res);
             }
-
           }
           
           else { // user with this email is not found
 
-            // generic error response
-            res.status(400);
-            res.json({
-              status: 'error',
-              message: 'unsuccessful login',
-              "code":"400"
-            });
+            // malformed incomming request
+            helper.failedLogin400(res);
           }
 
         }
@@ -570,24 +549,61 @@ function userRoutes() {
     } 
     else { // payload validation failed 
 
-      // error response
-      res.status(400);
-      res.json({
-        status: 'error',
-        message: 'malformed request, check JSON schema',
-        "code":"400"
-      });
-
+      // malformed incomming request
+      helper.malformed400(res);
     }
   }); // end of /login resource
-
 
   // API resource for user login.
   userRouter.post('/logout', function(req, res) {
     
-    // response
-    res.status(200);
-    res.json({status: 'success'});     
+    // approach
+    // 1. request header has token in it
+    // 2. delete the cache entry for the key
+
+    var token = req.headers.token || '';
+
+    // validate if valid uuid value
+    if (validator.isUUID(token,4)){
+      
+      // find if uuid token is in the cache
+      var cacheOptions = {
+        "act": "remove",
+        "key": ""+token,
+      };
+
+      fh.cache(cacheOptions, function (err, removedObject) {
+        
+        var userData = removedObject;
+
+        // redis comms error
+        if (err) {
+          console.error("dbcomms error: " + err);
+          // internal error response
+          helper.internal500(res);
+        }
+
+        else if (userData != 1){
+
+          // token was deleted from cache
+          res.status(400);
+          res.json({
+            status: 'error',
+            message: 'nothing to log out',
+            code:'400'
+          });          
+        }
+        else {
+          // token was deleted from cache
+          res.status(200);
+          res.json({status: 'success'}); 
+        }
+      });
+    } else { // no token supplied or token is corupt
+
+      // generic 400 error response
+      helper.generic400(res);
+    }
   });
 
   // API resource to create new user registration.
@@ -625,15 +641,8 @@ function userRoutes() {
         if (err) {
           console.error("dbcomms error: " + err);
 
-          // error response
-          res.status(500);
-          res.json({
-            status: 'error',
-            message: 'internal error',
-            "code":"500"
-          }); 
-
-
+          // internal error response
+          helper.internal500(res);
         } 
         else {
           
@@ -671,16 +680,8 @@ function userRoutes() {
               // db comms error
               if (err) {
                 console.error("dbcomms error: " + err);
-
-                // error response
-                res.status(500);
-                res.json({
-                  status: 'error',
-                  message: 'internal error',
-                  "code":"500"
-                });
-
-              
+                // internal error response
+                helper.internal500(res);             
               } 
               else { // new user created
 
@@ -701,14 +702,8 @@ function userRoutes() {
                   if (err) {
 
                     console.error("dbcomms error: " + err);
-
-                    // error response
-                    res.status(500);
-                    res.json({
-                      status: 'error',
-                      message: 'internal error',
-                      "code":"500"
-                    });
+                    // internal error response
+                    helper.internal500(res);
                   }
                   
                   // good to send the response
@@ -732,18 +727,11 @@ function userRoutes() {
      
     } 
     else { // payload validation failed 
-
-      // error response
-      res.status(400);
-      res.json({
-        status: 'error',
-        message: 'malformed request, check JSON schema',
-        "code":"400"
-      });
-
+      
+      // malformed incomming request
+      helper.malformed400(res);
     }
   });  // end of /register resource
-
   
   // end of users resources
   // any new resources shuld go here
