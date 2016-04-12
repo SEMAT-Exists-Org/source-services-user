@@ -12,6 +12,9 @@ var validator = require('validator');
 var crypto = require('crypto');
 var uuid = require('uuid');
 
+// common methods
+var helper = require('../utilities/helper.js');
+
 
 function userRoutes() {
   
@@ -49,24 +52,14 @@ function userRoutes() {
 
           console.error("dbcomms error: " + err);
 
-          // error response
-          res.status(500);
-          res.json({
-            status: 'error',
-            message: 'internal error',
-            "code":"500"
-          });
+          // internal error response
+          helper.internal500(res);
         }
 
         else if (userData == null){
 
           // no token in the cache found, relogin
-          res.status(302);
-          res.json({
-            status: 'error',
-            message: 'user must relogin',
-            "code":"302"
-          });          
+          helper.relogin302(res);         
         }
 
         else {
@@ -79,13 +72,8 @@ function userRoutes() {
 
             console.error("cached object not JSON: "+e);
 
-            // error response
-            res.status(500);
-            res.json({
-              status: 'error',
-              message: 'internal error',
-              "code":"500"
-            });
+            // internal error response
+            helper.internal500(res);
           }
 
           // only allow all user lookup if user is admin user
@@ -103,13 +91,8 @@ function userRoutes() {
               if (err) {
                 console.error("dbcomms error: " + err);
 
-                // error response
-                res.status(500);
-                res.json({
-                  status: 'error',
-                  message: 'internal error',
-                  "code":"500"
-                });
+                // internal error response
+                helper.internal500(res);
               } 
               
               else {              
@@ -130,26 +113,15 @@ function userRoutes() {
 
           else { // not admin user
 
-            // generic error response
-            res.status(400);
-            res.json({
-              status: 'error',
-              message: 'bad request',
-              "code":"400"
-            });
-
+            // generic 400 error response
+            helper.generic400(res);    
           }
         }
       });
     } else { // no token suplie in the request
 
-      // generic error response
-      res.status(400);
-      res.json({
-        status: 'error',
-        message: 'bad request',
-        "code":"400"
-      });
+      // generic 400 error response
+      helper.generic400(res); 
     }
   });
 
