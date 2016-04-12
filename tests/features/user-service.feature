@@ -32,6 +32,27 @@ Feature:
 		And response body should be valid json
 		And response body should contain relogin
 
+	Scenario: As a client application I should be asked to relogin while retrieving user details
+		Given I set User-Agent header to cucumber-tests
+		And I set Content-Type header to application/json
+		And I set token header to 3e0f8f0a-c895-4749-9a6c-f29651f1c649
+		When I GET /users/5703f9eb5306583d5a000018
+		Then response code should be 302
+		And response body should be valid json
+		And response body should contain relogin
+
+	Scenario: As a client application I should be asked to relogin while deleting user
+		Given I set User-Agent header to cucumber-tests
+		And I set Content-Type header to application/json
+		And I set token header to 3e0f8f0a-c895-4749-9a6c-f29651f1c649
+		When I DELETE /users/5703f9eb5306583d5a000018
+		Then response code should be 302
+		And response body should be valid json
+		And response body should contain relogin
+
+
+
+
 
 
 

@@ -23,8 +23,7 @@ function userRoutes() {
   userRouter.use(bodyParser());
 
   
-  // API resource to get all users.
-  // should only acceesible for administrative users (via admin user tokens).
+  // API resource to get all users (admin resource).
   userRouter.get('/', function(req, res) {
 
     // approach
@@ -154,24 +153,14 @@ function userRoutes() {
 
           console.error("dbcomms error: " + err);
 
-          // error response
-          res.status(500);
-          res.json({
-            status: 'error',
-            message: 'internal error',
-            "code":"500"
-          });
+          // internal error response
+          helper.internal500(res);
         }
 
         else if (userData == null){
 
           // no token in the cache found, relogin
-          res.status(302);
-          res.json({
-            status: 'error',
-            message: 'user must relogin',
-            "code":"302"
-          });          
+          helper.relogin302(res);           
         }
 
         else {
@@ -184,13 +173,8 @@ function userRoutes() {
 
             console.error("cached object is not JSON: "+e);
 
-            // error response
-            res.status(500);
-            res.json({
-              status: 'error',
-              message: 'internal error',
-              "code":"500"
-            });
+            // internal error response
+            helper.internal500(res);
           }
 
           // only allow all user lookup if user is admin user
@@ -209,13 +193,8 @@ function userRoutes() {
               if (err) {
                 console.error("dbcomms error: " + err);
 
-                // error response
-                res.status(500);
-                res.json({
-                  status: 'error',
-                  message: 'internal error',
-                  "code":"500"
-                });
+                // internal error response
+                helper.internal500(res);
               } 
               
               else {              
@@ -234,30 +213,19 @@ function userRoutes() {
 
           else { // not admin user
 
-            // generic error response
-            res.status(400);
-            res.json({
-              status: 'error',
-              message: 'bad request',
-              "code":"400"
-            });
-
+            // generic 400 error response
+            helper.generic400(res);
           }
         }
       });
     } else { // no token suplie in the request
 
-      // generic error response
-      res.status(400);
-      res.json({
-        status: 'error',
-        message: 'bad request',
-        "code":"400"
-      });
+      // generic 400 error response
+      helper.generic400(res);
     }
   });
 
-  // Update single user details (admin resource)
+  // API resource to update single user details (admin resource)
   userRouter.put('/:guid', function(req, res) {
     
     var token = req.headers.token || '';
@@ -291,24 +259,14 @@ function userRoutes() {
 
           console.error("dbcomms error: " + err);
 
-          // error response
-          res.status(500);
-          res.json({
-            status: 'error',
-            message: 'internal error',
-            "code":"500"
-          });
+          // internal error response
+          helper.internal500(res);
         }
 
         else if (userData == null){
 
           // no token in the cache found, relogin
-          res.status(302);
-          res.json({
-            status: 'error',
-            message: 'user must relogin',
-            "code":"302"
-          });          
+          helper.relogin302(res);           
         }
 
         else {
@@ -321,13 +279,8 @@ function userRoutes() {
 
             console.error("cached object is not JSON: "+e);
 
-            // error response
-            res.status(500);
-            res.json({
-              status: 'error',
-              message: 'internal error',
-              "code":"500"
-            });
+            // internal error response
+            helper.internal500(res);
           }
 
           // only allow all user lookup if user is admin user
@@ -367,13 +320,8 @@ function userRoutes() {
                 if (err) {
                   console.error("dbcomms error: " + err);
 
-                  // error response
-                  res.status(500);
-                  res.json({
-                    status: 'error',
-                    message: 'internal error',
-                    "code":"500"
-                  });
+                  // internal error response
+                  helper.internal500(res);
                 } 
                 
                 else {              
@@ -393,32 +341,21 @@ function userRoutes() {
 
           else { // not admin user
 
-            // generic error response
-            res.status(400);
-            res.json({
-              status: 'error',
-              message: 'bad request',
-              "code":"400"
-            });
-
+            // generic 400 error response
+            helper.generic400(res);
           }
         }
       });
     } 
-    else { // no token suplie in the request
+    else { // no token suplied in the request
 
-      // generic error response
-      res.status(400);
-      res.json({
-        status: 'error',
-        message: 'malformed request, check JSON schema',
-        "code":"400"
-      });
-    } 
-
+      console.log('no token');
+      // generic 400 error response
+      helper.generic400(res);
+    }
   });
 
-  // API resource to update single user details (admin resource)
+  // API resource to delete single user (admin resource)
   userRouter.delete('/:guid', function(req, res) {
 
     
@@ -443,24 +380,14 @@ function userRoutes() {
 
           console.error("dbcomms error: " + err);
 
-          // error response
-          res.status(500);
-          res.json({
-            status: 'error',
-            message: 'internal error',
-            "code":"500"
-          });
+          // internal error response
+          helper.internal500(res);
         }
 
         else if (userData == null){
 
           // no token in the cache found, relogin
-          res.status(302);
-          res.json({
-            status: 'error',
-            message: 'user must relogin',
-            "code":"302"
-          });          
+          helper.relogin302(res);          
         }
 
         else {
@@ -473,13 +400,8 @@ function userRoutes() {
 
             console.error("cached object is not JSON: "+e);
 
-            // error response
-            res.status(500);
-            res.json({
-              status: 'error',
-              message: 'internal error',
-              "code":"500"
-            });
+            // internal error response
+            helper.internal500(res);
           }
 
           // only allow all user lookup if user is admin user
@@ -498,13 +420,8 @@ function userRoutes() {
               if (err) {
                 console.error("dbcomms error: " + err);
 
-                // error response
-                res.status(500);
-                res.json({
-                  status: 'error',
-                  message: 'internal error',
-                  "code":"500"
-                });
+                // internal error response
+                helper.internal500(res);
               } 
               
               else {              
@@ -512,35 +429,22 @@ function userRoutes() {
                 // user details response
                 res.status(200);
                 res.json({status: 'success'});                
-              }
-            
+              }            
             });
           }
 
           else { // not admin user
 
-            // generic error response
-            res.status(400);
-            res.json({
-              status: 'error',
-              message: 'bad request',
-              "code":"400"
-            });
-
+            // generic 400 error response
+            helper.generic400(res);
           }
         }
       });
     } else { // no token suplie in the request
 
-      // generic error response
-      res.status(400);
-      res.json({
-        status: 'error',
-        message: 'bad request',
-        "code":"400"
-      });
-    }  
-
+      // generic 400 error response
+      helper.generic400(res);
+    }
   });
 
   // API resource for user login.
@@ -675,7 +579,6 @@ function userRoutes() {
       });
 
     }
-
   }); // end of /login resource
 
 
@@ -685,7 +588,6 @@ function userRoutes() {
     // response
     res.status(200);
     res.json({status: 'success'});     
-
   });
 
   // API resource to create new user registration.
@@ -840,7 +742,6 @@ function userRoutes() {
       });
 
     }
-
   });  // end of /register resource
 
   
