@@ -9,13 +9,13 @@ module.exports = function(grunt) {
       js: {
         files: ['gruntfile.js', 'application.js', 'apis/**/*.js', 'test/**/*.js'],
         options: {
-          livereload: true
+          livereload: 12346
         }
       },
       html: {
         files: ['public/views/**', 'app/views/**'],
         options: {
-          livereload: true
+          livereload: 12346
         }
       }
     },
