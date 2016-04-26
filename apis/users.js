@@ -672,6 +672,7 @@ function userRoutes() {
                 "firstname": ""+firstname,
                 "lastname": ""+lastname,
                 "email":""+email,
+                "projects":[],
                 "password":""+crypto.createHash('md5').update(password).digest("hex"),
                 "role":"user"
               }
