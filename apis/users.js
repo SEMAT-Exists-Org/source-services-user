@@ -189,14 +189,18 @@ function userRoutes() {
 
             // db query
             fh.db(options, function (err, data) {
-              
+
               if (err) {
                 console.error("dbcomms error: " + err);
 
                 // internal error response
                 helper.internal500(res);
-              } 
-              
+              }
+              else if (JSON.stringify(data) == '{}'){
+
+                // no token in the cache found, relogin
+                helper.notFound404(res);           
+              }
               else {              
                
                 // we have got the response

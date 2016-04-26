@@ -55,6 +55,16 @@ Helper.prototype.failedLogin400 = function(res) {
   });
 };
 
+Helper.prototype.notFound404 = function(res) {
+  // generic failed login response
+  res.status(404);
+  res.json({
+    status: 'error',
+    message: 'not found',
+    "code":"404"
+  });
+};
+
 Helper.prototype.relogin302 = function(res) {
 
   // no token in the cache found, relogin
