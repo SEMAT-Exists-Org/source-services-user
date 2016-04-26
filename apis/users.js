@@ -240,13 +240,16 @@ function userRoutes() {
     var lastname = req.body.lastname || '';
     var email = req.body.email || '';
     var role = req.body.role || '';
+    var projects = req.body.projects || '';
        
 
     // validate if valid uuid value
     if (validator.isUUID(token,4) && 
         validator.isAlphanumeric(firstname) && 
         validator.isAlphanumeric(lastname) && 
-        validator.isEmail(email) && validator.isAlphanumeric(role)){
+        validator.isEmail(email) &&
+        validator.isAlphanumeric(role) &&
+        (Object.prototype.toString.call(projects) === '[object Array]')){
       
       // find if uuid token is in the cache
       var cacheOptions = {
@@ -297,9 +300,7 @@ function userRoutes() {
               "guid": ""+guid 
             };
 
-            fh.db(options, function (err, entity) {
-
-              
+            fh.db(options, function (err, entity) {              
 
               // this will be updated
               var entityToUpdate = entity.fields;
@@ -310,6 +311,7 @@ function userRoutes() {
               entityToUpdate.lastname = lastname;
               entityToUpdate.email = email;
               entityToUpdate.role = role;
+              entityToUpdate.projects = projects;
               
               var options = {
                 "act": "update",
@@ -351,9 +353,7 @@ function userRoutes() {
         }
       });
     } 
-    else { // no token suplied in the request
-
-      console.log('no token');
+    else { // bad request parameters
       // generic 400 error response
       helper.generic400(res);
     }
