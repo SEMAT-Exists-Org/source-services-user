@@ -128,9 +128,10 @@ function userRoutes() {
   userRouter.get('/:guid', function(req, res) {
       
     // approach
-    // 1. request header has token in it
-    // 2. compare if the token is admin level
-    // 3. retrieve user details by email if exists
+    // 1. validate the token from request header for format.
+    // 2. compare if the loged in user details in the cache are mathing the user details requested
+    // or if the user is admin
+    // 3. retrieve and send back user details by email
 
     var token = req.headers.token || '';
     var guid = req.params.guid || '';
@@ -177,8 +178,12 @@ function userRoutes() {
             helper.internal500(res);
           }
 
-          // only allow all user lookup if user is admin user
-          if (userDataJSON.fields.role == "admin") {
+          console.error("asking for info on guid: "+guid);
+          console.error(userDataJSON.guid);
+
+          // only allow all user lookup if user is asking his own details
+          // or the user is an admin user
+          if (userDataJSON.guid == guid || userDataJSON.fields.role == "admin") {
 
             // all user lookup
             var options = {
