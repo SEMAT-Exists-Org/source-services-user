@@ -364,6 +364,111 @@ function userRoutes() {
     }
   });
 
+  // API resource to update single user projects (admin / or self resource)
+  userRouter.put('/:guid/projects', function(req, res) {
+    
+    var token = req.headers.token || '';
+    var guid = req.params.guid || '';
+
+    // preparing for validation
+    var project = req.body || '';       
+
+    // validate if valid uuid value
+    if (project != ''){
+      
+      // find if uuid token is in the cache
+      var cacheOptions = {
+        "act": "load",
+        "key": ""+token,
+      };
+
+      fh.cache(cacheOptions, function (err, cachedObject) {
+        
+        var userData = cachedObject;
+        // redis comms error
+        if (err) {
+          console.error("dbcomms error: " + err);
+          // internal error response
+          helper.internal500(res);
+        }
+        else if (userData == null){
+          // no token in the cache found, relogin
+          helper.relogin302(res);           
+        }
+        else {
+          // JSON.parse fails if object is not JSON
+          try {
+            var userDataJSON = JSON.parse(userData);
+          } 
+          catch (e){
+            console.error("cached object is not JSON: "+e);
+            // internal error response
+            helper.internal500(res);
+          }
+
+          // only allow all user lookup if user is admin user or updating his own details
+          if (userDataJSON.guid == guid || userDataJSON.fields.role == "admin") {
+
+            // first we get the user by id
+            var options = {
+              "act": "read",
+              "type": "sematUsers",
+              "guid": ""+guid 
+            };
+
+            fh.db(options, function (err, entity) {              
+
+              // this will be updated
+              var entityToUpdate = entity.fields;
+
+              // handle the case if user projects array doesn't exist (old user objects)
+              if ((Object.prototype.toString.call(entityToUpdate.projects) === '[object Array]')){
+                entityToUpdate.projects.push(project);
+              } else {
+                entityToUpdate.projects = [];
+                entityToUpdate.projects.push(project);
+              }
+              //console.log(entityToUpdate);
+              
+              var options = {
+                "act": "update",
+                "type": "sematUsers",
+                "guid": ""+guid,
+                "fields": entityToUpdate
+              };
+
+              // db query
+              fh.db(options, function (err, data) {
+                
+                if (err) {
+                  console.error("dbcomms error: " + err);
+                  // internal error response
+                  helper.internal500(res);
+                }                
+                else {            
+                  // removing password field before sending back
+                  delete data.fields.password;
+                  // user details response
+                  res.status(200);
+                  res.json({status: 'success', user:data});                
+                }              
+              });
+            });            
+          }
+
+          else { // no permission to update
+            // generic 400 error response
+            helper.generic400(res);
+          }
+        }
+      });
+    } 
+    else { // bad request parameters
+      // generic 400 error response
+      helper.generic400(res);
+    }
+  });
+
   // API resource to delete single user (admin resource)
   userRouter.delete('/:guid', function(req, res) {
 

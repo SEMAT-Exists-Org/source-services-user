@@ -375,6 +375,72 @@ Errors
 	}
 ```
 
+### Update Specific User Projects (admin resource)
+
+Admin resources can only be consumed by admin level users. 
+Service checks the user role by validating supplied token
+
+This resource allows to add project id to the user profile.
+
+#### Request
+
+```json
+	PUT /users/{user-guid}/projects	
+	Headers: Content-Type: application/json
+	Headers: token: 677fac2f-db89-4674-bdcf-69831370769a
+	{
+        "projectid": "571e0e0a4139f60000000001"
+    }
+```
+
+#### Response
+Success
+
+```json
+{
+  "status": "success",
+  "user": {
+    "type": "sematUsers",
+    "guid": "57062c5a4d74eeecb0000001",
+    "fields": {
+      "firstname": "Saulius",
+      "lastname": "Zukauskas",
+      "email": "root@email.com",
+      "role": "admin",
+      "projects":[
+        {"projectid": "571e0e0a4139f60000000001"}
+      ]
+    }
+  }
+}
+```	
+
+Errors
+
+```json
+	{
+    	"status": "error",
+    	"message":"user must relogin",
+    	"code":"302"
+	}
+```
+
+```json
+	{
+    	"status": "error",
+    	"message":"bad request",
+    	"code":"400"
+	}
+```
+
+```json
+	{
+    	"status": "error",
+    	"message":"internal error",
+    	"code":"500"
+	}
+```
+
 ### Delete Specific User (admin resource)
 
 Admin resources can only be consumed by admin level users. Service checks the user role by validating suplied token
