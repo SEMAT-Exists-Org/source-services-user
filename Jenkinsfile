@@ -16,6 +16,7 @@ node {
    // Testing stage
    stage 'Testing Stage'
    // running virtual xvfb for Electron tests
+   sh 'grunt serve'
    sh 'grunt test'
 
    // Mark the code 'last stage'....
