@@ -111,10 +111,10 @@ module.exports = function(grunt) {
   // Making grunt default to force in order not to break the project.
   grunt.option('force', true);
 
+  grunt.registerTask('run-test', ['shell:cucumberjs']);
   grunt.registerTask('test', ['cucumberjs']);
   grunt.registerTask('analysis', ['plato:src', 'open:platoReport']);
   grunt.registerTask('serve', ['env:local', 'concurrent:serve']);
   grunt.registerTask('debug', ['env:local', 'concurrent:debug']);
   grunt.registerTask('default', ['serve']);
-
 };

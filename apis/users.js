@@ -616,7 +616,7 @@ function userRoutes() {
                 "act": "save",
                 "key": ""+userUuid,
                 "value":""+JSON.stringify(data.list[0]),
-                "expire": 900 // Expiry time in seconds.
+                "expire": 2628000 // Expiry time in seconds.
               };
 
               fh.cache(cacheOptions, function (err, cachedObject) {
